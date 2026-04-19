@@ -21,12 +21,16 @@ final class WatchConnectivityManager: NSObject {
     func send(_ payload: [String: Any]) {
         guard WCSession.isSupported() else { return }
         let session = WCSession.default
-        guard session.activationState == .activated else { return }
+        guard session.activationState == .activated,
+              session.isPaired,
+              session.isWatchAppInstalled else { return }
 
+        // Always update context so Watch has fresh data on launch
+        try? session.updateApplicationContext(payload)
+
+        // Additionally push live via sendMessage when Watch is in foreground
         if session.isReachable {
             session.sendMessage(payload, replyHandler: nil, errorHandler: nil)
-        } else {
-            try? session.updateApplicationContext(payload)
         }
     }
 }

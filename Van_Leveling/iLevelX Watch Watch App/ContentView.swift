@@ -94,11 +94,9 @@ struct WatchLevelView: View {
         }
         .onAppear {
             compass.start()
-            WKExtension.shared().isFrontmostTimeoutExtended = true
         }
         .onDisappear {
             compass.stop()
-            WKExtension.shared().isFrontmostTimeoutExtended = false
         }
         .sensoryFeedback(.success, trigger: userIsLevel) { _, new in new }
     }
@@ -173,11 +171,11 @@ struct WatchLevelView: View {
                         .padding(.horizontal, 4)
                     if let sub = p.subtext {
                         Text(sub)
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-                            .foregroundStyle(.white.opacity(0.85))
+                            .font(.system(size: 15, weight: .black, design: .rounded))
+                            .foregroundStyle(.white)
                             .multilineTextAlignment(.center)
                             .lineLimit(2)
-                            .minimumScaleFactor(0.7)
+                            .minimumScaleFactor(0.75)
                             .padding(.horizontal, 4)
                     }
                 }
@@ -379,9 +377,9 @@ private struct WatchEdgeBar: View {
     var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: 4)
-                .fill(color.opacity(isLow ? 0.25 : 0.08))
+                .fill(color.opacity(isLow ? 0.25 : 0.35))
             RoundedRectangle(cornerRadius: 4)
-                .stroke(color.opacity(isLow ? 0.6 : 0.2), lineWidth: 1)
+                .stroke(color.opacity(isLow ? 0.6 : 0.85), lineWidth: 1)
 
             if axis == .horizontal {
                 HStack(spacing: 3) {
