@@ -36,8 +36,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		DD2F249D2F7D4CFF00DB60EE /* Van_Leveling.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Van_Leveling.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		DD2F24D32F7D5E2000DB60EE /* iLevelX Watch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "iLevelX Watch Watch App.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD2F249D2F7D4CFF00DB60EE /* Van_Leveling.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = Van_Leveling.app; path = iLevelX.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DD2F24D32F7D5E2000DB60EE /* iLevelX Watch Watch App.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; name = "iLevelX Watch Watch App.app"; path = iLevelX.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DD2F24E52F7D5FE500DB60EE /* WatchConnectivity.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WatchConnectivity.framework; path = System/Library/Frameworks/WatchConnectivity.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 

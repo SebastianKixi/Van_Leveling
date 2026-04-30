@@ -7,14 +7,58 @@ struct ContentView: View {
     @State private var showOnboarding = false
 
     var body: some View {
+        TabView {
+            ProfileLevelTab(viewModel: viewModel, showSettings: $showSettings)
+                .tabItem {
+                    Label("Profile", systemImage: "scope")
+                }
+
+            WasserwaageView(viewModel: viewModel, showSettings: $showSettings)
+                .tabItem {
+                    Label("Wasserwaage", systemImage: "ruler")
+                }
+
+            WinkelmesserView(viewModel: viewModel, showSettings: $showSettings)
+                .tabItem {
+                    Label("Winkel", systemImage: "angle")
+                }
+        }
+        .onAppear {
+            viewModel.start()
+            UIApplication.shared.isIdleTimerDisabled = true
+            if !hasSeenOnboarding {
+                showOnboarding = true
+                hasSeenOnboarding = true
+            }
+        }
+        .onDisappear {
+            viewModel.stop()
+            UIApplication.shared.isIdleTimerDisabled = false
+        }
+        .fullScreenCover(isPresented: $showOnboarding) {
+            OnboardingView()
+        }
+        .sheet(isPresented: $showSettings) {
+            SettingsView(viewModel: viewModel)
+        }
+        .onChange(of: viewModel.adjustedPitch) { viewModel.onMotionTick() }
+        .sensoryFeedback(.success, trigger: viewModel.isLevel) { _, new in new }
+    }
+}
+
+// MARK: - Profile Tab (bisherige Hauptansicht)
+
+private struct ProfileLevelTab: View {
+    let viewModel: LevelViewModel
+    @Binding var showSettings: Bool
+
+    var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
 
-                    // ── Status badge ──────────────────────────────────────
                     StatusBadge(isLevel: viewModel.isLevel)
 
-                    // ── Bubble level ──────────────────────────────────────
                     BubbleLevelView(
                         pitch: viewModel.adjustedPitch,
                         roll:  viewModel.adjustedRoll,
@@ -22,7 +66,6 @@ struct ContentView: View {
                     )
                     .padding(.horizontal, 28)
 
-                    // ── Degree readouts ───────────────────────────────────
                     HStack(spacing: 20) {
                         AngleReadout(
                             label: "Neigung",
@@ -39,11 +82,9 @@ struct ContentView: View {
                     }
                     .padding(.horizontal, 20)
 
-                    // ── Guidance ──────────────────────────────────────────
                     GuidanceView(viewModel: viewModel)
                         .padding(.horizontal, 20)
 
-                    // ── Level bars ────────────────────────────────────────
                     LevelBarsView(
                         pitch: viewModel.adjustedPitch,
                         roll:  viewModel.adjustedRoll,
@@ -51,10 +92,8 @@ struct ContentView: View {
                     )
                     .padding(.horizontal, 20)
 
-                    // ── Profile picker ────────────────────────────────────
                     ProfilePicker(viewModel: viewModel)
 
-                    // ── Calibration ───────────────────────────────────────
                     VStack(spacing: 6) {
                         Button {
                             viewModel.calibrate()
@@ -88,28 +127,7 @@ struct ContentView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showSettings) {
-                SettingsView(viewModel: viewModel)
-            }
         }
-        .onAppear {
-            viewModel.start()
-            UIApplication.shared.isIdleTimerDisabled = true
-            if !hasSeenOnboarding {
-                showOnboarding = true
-                hasSeenOnboarding = true
-            }
-        }
-        .onDisappear {
-            viewModel.stop()
-            UIApplication.shared.isIdleTimerDisabled = false
-        }
-        .fullScreenCover(isPresented: $showOnboarding) {
-            OnboardingView()
-        }
-        // Drive sound + Watch updates on every sensor tick
-        .onChange(of: viewModel.adjustedPitch) { viewModel.onMotionTick() }
-        .sensoryFeedback(.success, trigger: viewModel.isLevel) { _, new in new }
     }
 }
 
