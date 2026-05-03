@@ -7,12 +7,17 @@ struct WasserwaageView: View {
     let viewModel: LevelViewModel
     @Binding var showSettings: Bool
 
-    @Environment(\.verticalSizeClass) private var vSize
-
     /// Tilt entlang der iPhone-Längsachse (Y-Achse des Geräts) in Grad.
     /// `gravityY = sin(tiltAngle)` wenn das iPhone hochkant auf der langen Kante steht.
     private var tilt: Double {
         asin(max(-1.0, min(1.0, viewModel.motion.gravityY))) * 180.0 / .pi
+    }
+
+    /// Erkennt ob das iPhone physisch auf der langen Kante (Querformat) liegt –
+    /// unabhängig davon ob die UI gerade landscape ist.
+    /// Schwelle 0.6 erlaubt Neigungen bis ca. ±53° beim Messen.
+    private var phoneOnLongEdge: Bool {
+        abs(viewModel.motion.gravityX) > 0.6
     }
 
     private let tolerance: Double = 0.5
@@ -21,7 +26,7 @@ struct WasserwaageView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if vSize == .compact {
+                if phoneOnLongEdge {
                     landscapeLayout
                 } else {
                     portraitHint

@@ -79,20 +79,7 @@ struct LevelProfile: Identifiable, Hashable {
         showPitch: false
     )
 
-    static let billiard = LevelProfile(
-        id: "billiard",
-        name: "Billard",
-        icon: "smallcircle.filled.circle.fill",
-        tolerance: 0.1,
-        isProOnly: true,
-        rollPositive: "Rechtes Bein verstellen",
-        rollNegative: "Linkes Bein verstellen",
-        pitchPositive: "Hinteres Bein verstellen",
-        pitchNegative: "Vorderes Bein verstellen",
-        showPitch: true
-    )
-
     static let all: [LevelProfile] = [
-        .general, .caravan, .camera, .appliance, .shelf, .billiard
+        .general, .caravan, .camera, .appliance, .shelf
     ]
 }

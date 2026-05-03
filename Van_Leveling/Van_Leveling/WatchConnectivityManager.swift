@@ -7,12 +7,21 @@ import Observation
 final class WatchConnectivityManager: NSObject {
 
     var isWatchReachable: Bool = false
+    var isWatchPaired: Bool = false
+    var isWatchAppInstalled: Bool = false
 
     override init() {
         super.init()
         guard WCSession.isSupported() else { return }
         WCSession.default.delegate = self
         WCSession.default.activate()
+    }
+
+    private func refreshState() {
+        let session = WCSession.default
+        isWatchReachable    = session.isReachable
+        isWatchPaired       = session.isPaired
+        isWatchAppInstalled = session.isWatchAppInstalled
     }
 
     /// Sends a dictionary to the Watch.
@@ -44,11 +53,15 @@ extension WatchConnectivityManager: WCSessionDelegate {
         activationDidCompleteWith state: WCSessionActivationState,
         error: Error?
     ) {
-        Task { @MainActor in self.isWatchReachable = session.isReachable }
+        Task { @MainActor in self.refreshState() }
     }
 
     nonisolated func sessionReachabilityDidChange(_ session: WCSession) {
-        Task { @MainActor in self.isWatchReachable = session.isReachable }
+        Task { @MainActor in self.refreshState() }
+    }
+
+    nonisolated func sessionWatchStateDidChange(_ session: WCSession) {
+        Task { @MainActor in self.refreshState() }
     }
 
     // Required on iOS

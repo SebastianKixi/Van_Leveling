@@ -2,39 +2,62 @@ import SwiftUI
 
 /// Winkelmesser – Hauptansicht im Querformat. Zeigt die Neigung des iPhones
 /// als drehende Skalen-Scheibe plus Pitch/Roll-Werte und Halten-Funktion.
+///
+/// Achs-Mapping (Querformat): aus Anwendersicht entspricht die seitliche
+/// Neigung der Geräte-Pitch und die Vorne/Hinten-Neigung der Geräte-Roll.
 struct WinkelmesserView: View {
     let viewModel: LevelViewModel
     @Binding var showSettings: Bool
 
-    @Environment(\.verticalSizeClass) private var vSize
-
     @State private var isHeld: Bool = false
-    @State private var heldPitch: Double = 0
-    @State private var heldRoll: Double = 0
+    @State private var heldFwdBack: Double = 0
+    @State private var heldLeftRight: Double = 0
 
-    @State private var tarePitch: Double = 0
-    @State private var tareRoll: Double = 0
+    @State private var tareFwdBack: Double = 0
+    @State private var tareLeftRight: Double = 0
 
-    private var displayPitch: Double {
-        isHeld ? heldPitch : viewModel.motion.pitch - tarePitch
+    /// Vorne/Hinten-Neigung aus dem Gravitations-Vektor.
+    /// Im Querformat aufrecht: gz = 0. Kippt das iPhone die Front weg
+    /// vom Anwender, gz wird positiv.
+    private var rawFwdBack: Double {
+        let g = max(-1.0, min(1.0, viewModel.motion.gravityZ))
+        return asin(g) * 180.0 / .pi
     }
 
-    private var displayRoll: Double {
-        isHeld ? heldRoll : viewModel.motion.roll - tareRoll
+    /// Links/Rechts-Neigung aus dem Gravitations-Vektor.
+    /// Im Querformat aufrecht: gy = 0. Kippt das iPhone seitlich,
+    /// wandert gy entsprechend.
+    private var rawLeftRight: Double {
+        let g = max(-1.0, min(1.0, viewModel.motion.gravityY))
+        return asin(g) * 180.0 / .pi
+    }
+
+    private var fwdBackTilt: Double {
+        isHeld ? heldFwdBack : rawFwdBack - tareFwdBack
+    }
+
+    private var leftRightTilt: Double {
+        isHeld ? heldLeftRight : rawLeftRight - tareLeftRight
     }
 
     private var isLevel: Bool {
-        abs(displayPitch) <= 1.0 && abs(displayRoll) <= 1.0
+        abs(fwdBackTilt) <= 1.0 && abs(leftRightTilt) <= 1.0
     }
 
     private var tareActive: Bool {
-        tarePitch != 0 || tareRoll != 0
+        tareFwdBack != 0 || tareLeftRight != 0
+    }
+
+    /// Erkennt ob das iPhone physisch hochkant im Querformat (auf der langen
+    /// Kante) liegt. Wenn flach hingelegt, ergibt die Anzeige keinen Sinn.
+    private var phoneOnLongEdge: Bool {
+        abs(viewModel.motion.gravityX) > 0.6
     }
 
     var body: some View {
         NavigationStack {
             Group {
-                if vSize == .compact {
+                if phoneOnLongEdge {
                     landscapeLayout
                 } else {
                     portraitHint
@@ -53,99 +76,104 @@ struct WinkelmesserView: View {
             }
         }
         .sensoryFeedback(.impact(weight: .medium), trigger: isHeld)
-        .lockOrientation(.landscape)
     }
 
     // MARK: - Landscape (Hauptansicht)
 
     private var landscapeLayout: some View {
-        HStack(spacing: 16) {
-            // Linke Spalte: Skalen-Scheibe
-            ProtractorDial(
-                rollDeg: displayRoll,
-                pitchDeg: displayPitch,
-                isLevel: isLevel
-            )
-            .padding(.vertical, 8)
-            .padding(.leading, 8)
+        GeometryReader { geo in
+            let dialSize = min(geo.size.width * 0.42, geo.size.height - 16)
 
-            // Rechte Spalte: Status, Werte, Buttons
-            VStack(spacing: 10) {
-                // Status
-                HStack(spacing: 6) {
-                    Image(systemName: isHeld ? "lock.fill" : "dot.radiowaves.left.and.right")
-                        .foregroundStyle(isHeld ? .orange : .green)
-                    Text(isHeld ? "Gehalten" : "Live")
-                        .font(.caption.bold())
-                        .foregroundStyle(isHeld ? .orange : .green)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(.regularMaterial, in: Capsule())
-
-                // Pitch
-                AngleChip(
-                    icon: "arrow.up.and.down",
-                    label: "Pitch",
-                    sublabel: "Vorne / Hinten",
-                    value: displayPitch,
-                    accent: .blue
+            HStack(alignment: .center, spacing: 18) {
+                // Linke Spalte: Skalen-Scheibe
+                ProtractorDial(
+                    fwdBackTilt: fwdBackTilt,
+                    leftRightTilt: leftRightTilt,
+                    isLevel: isLevel
                 )
+                .frame(width: dialSize, height: dialSize)
 
-                // Roll
-                AngleChip(
-                    icon: "arrow.left.and.right",
-                    label: "Roll",
-                    sublabel: "Links / Rechts",
-                    value: displayRoll,
-                    accent: .orange
-                )
+                // Rechte Spalte: Status, Werte, Buttons
+                VStack(spacing: 10) {
+                    // Status
+                    HStack(spacing: 6) {
+                        Image(systemName: isHeld ? "lock.fill" : "dot.radiowaves.left.and.right")
+                            .foregroundStyle(isHeld ? .orange : .green)
+                        Text(isHeld ? "Gehalten" : "Live")
+                            .font(.caption.bold())
+                            .foregroundStyle(isHeld ? .orange : .green)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(.regularMaterial, in: Capsule())
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Buttons
-                HStack(spacing: 8) {
-                    Button {
-                        if isHeld {
-                            isHeld = false
-                        } else {
-                            heldPitch = viewModel.motion.pitch - tarePitch
-                            heldRoll  = viewModel.motion.roll  - tareRoll
-                            isHeld = true
+                    // Vorne/Hinten (Nicken)
+                    AngleChip(
+                        illustration: AnyView(TiltIllustration(axis: .forwardBack)),
+                        label: "Vorne / Hinten",
+                        sublabel: "wie Nicken",
+                        value: fwdBackTilt,
+                        accent: .accentColor
+                    )
+
+                    // Links/Rechts (Rollen)
+                    AngleChip(
+                        illustration: AnyView(TiltIllustration(axis: .leftRight)),
+                        label: "Links / Rechts",
+                        sublabel: "wie Schaukeln",
+                        value: leftRightTilt,
+                        accent: .orange
+                    )
+
+                    // Buttons
+                    HStack(spacing: 8) {
+                        Button {
+                            if isHeld {
+                                isHeld = false
+                            } else {
+                                heldFwdBack   = rawFwdBack   - tareFwdBack
+                                heldLeftRight = rawLeftRight - tareLeftRight
+                                isHeld = true
+                            }
+                        } label: {
+                            Label(isHeld ? "Lösen" : "Halten",
+                                  systemImage: isHeld ? "lock.open.fill" : "lock.fill")
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 4)
                         }
-                    } label: {
-                        Label(isHeld ? "Lösen" : "Halten",
-                              systemImage: isHeld ? "lock.open.fill" : "lock.fill")
+                        .buttonStyle(.borderedProminent)
+                        .tint(isHeld ? .orange : .accentColor)
+
+                        Button {
+                            if tareActive {
+                                tareFwdBack = 0
+                                tareLeftRight = 0
+                            } else {
+                                tareFwdBack = rawFwdBack
+                                tareLeftRight = rawLeftRight
+                            }
+                        } label: {
+                            Label(
+                                tareActive ? "Reset" : "Nullen",
+                                systemImage: tareActive
+                                    ? "arrow.counterclockwise"
+                                    : "scope"
+                            )
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 4)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .tint(isHeld ? .orange : .accentColor)
-
-                    Button {
-                        if tareActive {
-                            tarePitch = 0
-                            tareRoll = 0
-                        } else {
-                            tarePitch = viewModel.motion.pitch
-                            tareRoll = viewModel.motion.roll
                         }
-                    } label: {
-                        Label(
-                            tareActive ? "Reset" : "Nullen",
-                            systemImage: tareActive
-                                ? "arrow.counterclockwise"
-                                : "scope"
-                        )
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 4)
+                        .buttonStyle(.bordered)
+                        .disabled(isHeld)
                     }
-                    .buttonStyle(.bordered)
-                    .disabled(isHeld)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.trailing, 4)
             }
-            .padding(.trailing, 12)
-            .frame(maxWidth: .infinity)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(width: geo.size.width, height: geo.size.height)
         }
-        .padding(.vertical, 4)
     }
 
     // MARK: - Portrait (Hinweis)
@@ -161,7 +189,7 @@ struct WinkelmesserView: View {
             Text("iPhone quer drehen")
                 .font(.title2.bold())
 
-            Text("Der Winkelmesser arbeitet im Querformat\nfür die genaueste Anzeige.")
+            Text("Halte das iPhone auf der langen Kante\nan die Fläche, deren Neigung du messen möchtest.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -177,11 +205,11 @@ struct WinkelmesserView: View {
     }
 }
 
-// MARK: - Protractor Dial (Hero-Element)
+// MARK: - Protractor Dial
 
 private struct ProtractorDial: View {
-    let rollDeg: Double
-    let pitchDeg: Double
+    let fwdBackTilt: Double      // entspricht Geräte-Roll im Querformat
+    let leftRightTilt: Double    // entspricht Geräte-Pitch im Querformat
     let isLevel: Bool
 
     var body: some View {
@@ -203,24 +231,28 @@ private struct ProtractorDial: View {
                 // Skala
                 ScaleMarks(radius: radius)
 
-                // Horizont-Linie (rotiert mit Roll)
+                // Horizont (rotiert mit links/rechts-Neigung,
+                // verschiebt sich mit vorne/hinten-Neigung)
                 HorizonGroup(
-                    pitchDeg: pitchDeg,
+                    fwdBackTilt: fwdBackTilt,
                     radius: radius,
                     isLevel: isLevel
                 )
-                .rotationEffect(.degrees(-rollDeg))
-                .animation(.interpolatingSpring(stiffness: 120, damping: 16), value: rollDeg)
-                .animation(.interpolatingSpring(stiffness: 120, damping: 16), value: pitchDeg)
+                .rotationEffect(.degrees(-leftRightTilt))
+                .animation(.interpolatingSpring(stiffness: 120, damping: 16), value: leftRightTilt)
+                .animation(.interpolatingSpring(stiffness: 120, damping: 16), value: fwdBackTilt)
                 .clipShape(Circle())
 
-                // Mittiger Wert
+                // Mittiger Wert (zeigt die größere Abweichung)
+                let dominant = abs(leftRightTilt) >= abs(fwdBackTilt) ? leftRightTilt : fwdBackTilt
+                let dominantLabel = abs(leftRightTilt) >= abs(fwdBackTilt) ? "L / R" : "V / H"
+
                 VStack(spacing: 2) {
-                    Text(String(format: "%+.1f°", abs(rollDeg) >= abs(pitchDeg) ? rollDeg : pitchDeg))
-                        .font(.system(size: 32, weight: .heavy, design: .monospaced))
+                    Text(String(format: "%+.1f°", dominant))
+                        .font(.system(size: min(radius * 0.32, 32), weight: .heavy, design: .monospaced))
                         .foregroundStyle(isLevel ? .green : .primary)
                         .contentTransition(.numericText())
-                    Text(abs(rollDeg) >= abs(pitchDeg) ? "Roll" : "Pitch")
+                    Text(dominantLabel)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
                 }
@@ -231,9 +263,9 @@ private struct ProtractorDial: View {
                 // Fixer iPhone-Marker oben
                 VStack {
                     Image(systemName: "iphone.gen3")
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.system(size: 11, weight: .bold))
                         .foregroundStyle(.white)
-                        .padding(6)
+                        .padding(5)
                         .background(Color.accentColor, in: Circle())
                         .shadow(radius: 2)
                     Spacer()
@@ -285,51 +317,59 @@ private struct ScaleMarks: View {
     }
 }
 
-// MARK: - Horizont
+// MARK: - Horizont (zwei dezent-graue Halften, app-konform)
 
 private struct HorizonGroup: View {
-    let pitchDeg: Double
+    let fwdBackTilt: Double
     let radius: CGFloat
     let isLevel: Bool
 
     private var pitchOffset: CGFloat {
-        let clamped = max(-30.0, min(30.0, pitchDeg))
+        let clamped = max(-30.0, min(30.0, fwdBackTilt))
         return CGFloat(clamped) * (radius / 60)
     }
 
     var body: some View {
         ZStack {
+            // Obere Hälfte (Himmel): heller Akzent-Ton
             Rectangle()
                 .fill(LinearGradient(
-                    colors: [Color(red: 0.42, green: 0.65, blue: 0.95),
-                             Color(red: 0.62, green: 0.78, blue: 0.98)],
+                    colors: [
+                        Color.accentColor.opacity(0.18),
+                        Color.accentColor.opacity(0.08)
+                    ],
                     startPoint: .top, endPoint: .bottom))
                 .frame(width: radius * 3, height: radius * 3)
                 .offset(y: -radius * 1.5 + pitchOffset)
 
+            // Untere Hälfte (Boden): neutrale Grau-Töne
             Rectangle()
                 .fill(LinearGradient(
-                    colors: [Color(red: 0.55, green: 0.42, blue: 0.30),
-                             Color(red: 0.40, green: 0.30, blue: 0.22)],
+                    colors: [
+                        Color(.systemGray3),
+                        Color(.systemGray2)
+                    ],
                     startPoint: .top, endPoint: .bottom))
                 .frame(width: radius * 3, height: radius * 3)
                 .offset(y: radius * 1.5 + pitchOffset)
 
+            // Horizont-Linie
             Rectangle()
-                .fill(isLevel ? Color.green : Color.white.opacity(0.95))
+                .fill(isLevel ? Color.green : Color.primary)
                 .frame(width: radius * 2.4, height: 2.5)
                 .offset(y: pitchOffset)
                 .shadow(color: isLevel ? Color.green.opacity(0.7) : .clear, radius: 6)
 
+            // Pitch-Skala-Striche
             ForEach([-20, -10, 10, 20], id: \.self) { mark in
                 let y = pitchOffset - CGFloat(mark) * (radius / 60)
                 Rectangle()
-                    .fill(Color.white.opacity(0.7))
+                    .fill(Color.primary.opacity(0.5))
                     .frame(width: 24, height: 1.5)
                     .offset(y: y)
                 Text("\(abs(mark))")
                     .font(.system(size: 8, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(.white.opacity(0.85))
+                    .foregroundStyle(.secondary)
                     .offset(x: 22, y: y)
             }
         }
@@ -339,29 +379,29 @@ private struct HorizonGroup: View {
 // MARK: - Werte-Chip
 
 private struct AngleChip: View {
-    let icon: String
+    let illustration: AnyView
     let label: String
     let sublabel: String
     let value: Double
     let accent: Color
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             ZStack {
                 Circle()
                     .fill(accent.opacity(0.15))
-                    .frame(width: 30, height: 30)
-                Image(systemName: icon)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(accent)
+                    .frame(width: 38, height: 38)
+                illustration
             }
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(label)
                     .font(.caption.bold())
+                    .lineLimit(1)
                 Text(sublabel)
                     .font(.system(size: 9))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
 
             Spacer(minLength: 0)
@@ -375,6 +415,54 @@ private struct AngleChip: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+    }
+}
+
+// MARK: - Tilt-Illustration für die Chips
+
+private struct TiltIllustration: View {
+    enum Axis { case forwardBack, leftRight }
+    let axis: Axis
+
+    var body: some View {
+        ZStack {
+            // Referenz-Bodenlinie
+            Rectangle()
+                .fill(Color.secondary.opacity(0.45))
+                .frame(width: 22, height: 1)
+                .offset(y: 8)
+
+            switch axis {
+            case .forwardBack:
+                // Seitenansicht: schmales Rechteck (iPhone von der Kante) leicht nach vorne gekippt
+                RoundedRectangle(cornerRadius: 1.5)
+                    .fill(.primary)
+                    .frame(width: 5, height: 18)
+                    .rotationEffect(.degrees(-22))
+                    .offset(y: -1)
+
+                // Geschwungener Pfeil zeigt die Bewegung an
+                Image(systemName: "arrow.uturn.right")
+                    .font(.system(size: 10, weight: .black))
+                    .foregroundStyle(.tint)
+                    .rotationEffect(.degrees(-90))
+                    .offset(x: 9, y: -3)
+
+            case .leftRight:
+                // Frontansicht: breites Rechteck (iPhone landscape) seitlich gekippt
+                RoundedRectangle(cornerRadius: 1.5)
+                    .fill(.primary)
+                    .frame(width: 22, height: 6)
+                    .rotationEffect(.degrees(-18))
+                    .offset(y: -1)
+
+                Image(systemName: "arrow.left.and.right")
+                    .font(.system(size: 9, weight: .black))
+                    .foregroundStyle(.tint)
+                    .offset(y: 11)
+            }
+        }
+        .frame(width: 32, height: 28)
     }
 }
 

@@ -6,34 +6,46 @@ struct OnboardingView: View {
 
     private let pages: [OnboardingPage] = [
         OnboardingPage(
-            icon: "bubble.left.and.exclamationmark.bubble.right",
+            icon: "scope",
             iconColor: .blue,
             title: "Willkommen bei iLevelX",
-            body: "Richte jedes Objekt präzise waagerecht aus – ob Wohnwagen, Kamera, Regal oder Billardtisch. Leg einfach das iPhone auf die Fläche und folge den Anweisungen."
+            body: "Richte Objekte präzise aus – Wohnwagen, Möbel, Kamera, Regale und mehr.\n\nDrei Modi für drei Aufgaben: Profile, Wasserwaage und Winkelmesser. Wechseln kannst du unten über die Tab-Leiste."
         ),
         OnboardingPage(
-            icon: "scope",
+            icon: "rectangle.3.group",
             iconColor: .green,
-            title: "Die Libelle",
-            body: "Die Blase zeigt die aktuelle Neigung. Bring sie in die grüne Zone – dann ist alles waagerecht.\n\nDie Balken darunter zeigen dir die exakte Gradzahl für Links/Rechts und Vorne/Hinten."
+            title: "Profile",
+            body: "Lege das iPhone flach auf die Fläche, die du ausrichten möchtest.\n\nDie Libelle zeigt die Neigung – die Streifen links und unten markieren die hohe Seite. Bring die Blase in die grüne Zone, dann ist es waagerecht."
         ),
         OnboardingPage(
             icon: "slider.horizontal.3",
             iconColor: .orange,
-            title: "Profile",
-            body: "Wähle das passende Profil für deinen Einsatzzweck:\n\n• Allgemein – für alles\n• Wohnwagen – gröbere Toleranz\n• Kamera – hochpräzise (Pro)\n• Gerät – Waschmaschine & Co.\n• Regal – nur Links/Rechts\n• Billard – höchste Präzision (Pro)"
+            title: "Profil wählen",
+            body: "Pro Anwendungsfall ein eigenes Profil mit angepasster Toleranz und Anweisungstexten:\n\n• Allgemein – Standard-Modus\n• Wohnwagen – gröbere Toleranz\n• Gerät – Waschmaschine & Co.\n• Regal – nur Links/Rechts\n• Kamera – hochpräzise (Pro)"
+        ),
+        OnboardingPage(
+            icon: "ruler",
+            iconColor: .teal,
+            title: "Wasserwaage",
+            body: "Halte das iPhone quer auf der langen Kante an die Fläche, die du prüfen möchtest – wie eine klassische Alu-Wasserwaage.\n\nDas Bläschen wandert zur hohen Seite, der Grad-Wert zeigt die exakte Neigung."
+        ),
+        OnboardingPage(
+            icon: "angle",
+            iconColor: .indigo,
+            title: "Winkelmesser",
+            body: "Zum Messen von Neigungen und Steigungen. Halte das iPhone quer auf der langen Kante an die geneigte Fläche.\n\nMit 'Halten' frierst du den Wert ein, mit 'Nullen' setzt du die aktuelle Lage als 0°-Referenz."
         ),
         OnboardingPage(
             icon: "scope",
             iconColor: .accentColor,
             title: "Kalibrierung",
-            body: "Liegt das iPhone auf einer Fläche, die du als \"waagerecht\" definieren möchtest (z. B. leicht geneigter Boden), tippe auf 'Als Waagerecht setzen'.\n\nDie Kalibrierung lässt sich jederzeit in den Einstellungen zurücksetzen."
+            body: "Im Profile-Modus kannst du jede beliebige Position als \"waagerecht\" definieren – nützlich wenn der Untergrund nicht perfekt eben ist.\n\nLeg das iPhone wie gewünscht hin und tippe \"Als Waagerecht setzen\". Zurücksetzen jederzeit in den Einstellungen."
         ),
         OnboardingPage(
             icon: "applewatch",
             iconColor: .purple,
             title: "Apple Watch",
-            body: "Leg das iPhone auf das Objekt. Die Watch zeigt dir dank Kompass-Ausgleich immer die richtige Richtung – egal von welcher Seite du stehst.\n\nWische auf der Watch nach links für die Draufsicht-Übersicht."
+            body: "Leg das iPhone auf das Objekt – die Watch zeigt dir dank Kompass-Ausgleich immer die richtige Richtung, egal von welcher Seite du stehst.\n\nWische auf der Watch nach links für die Draufsicht-Übersicht, weiter für Verbindungsdetails."
         ),
     ]
 

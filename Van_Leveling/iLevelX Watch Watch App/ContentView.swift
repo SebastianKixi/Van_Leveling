@@ -2,8 +2,9 @@ import SwiftUI
 import WatchKit
 
 struct WatchLevelView: View {
-    @State private var rx      = WatchConnectivityReceiver()
-    @State private var compass = WatchHeadingManager()
+    @State private var rx       = WatchConnectivityReceiver()
+    @State private var compass  = WatchHeadingManager()
+    @State private var runtime  = WatchRuntimeSession()
 
     // MARK: - Heading delta (Watch minus iPhone, normalised to -180…180)
     var delta: Double {
@@ -94,9 +95,11 @@ struct WatchLevelView: View {
         }
         .onAppear {
             compass.start()
+            runtime.start()
         }
         .onDisappear {
             compass.stop()
+            runtime.stop()
         }
         .sensoryFeedback(.success, trigger: userIsLevel) { _, new in new }
     }

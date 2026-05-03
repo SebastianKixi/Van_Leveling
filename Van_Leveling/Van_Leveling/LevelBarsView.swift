@@ -50,11 +50,14 @@ struct LevelBar: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(label)
                     .font(.caption.bold())
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                 Text(valueLabel)
                     .font(.system(size: 8))
                     .foregroundStyle(.tertiary)
+                    .lineLimit(1)
             }
-            .frame(width: 38, alignment: .leading)
+            .frame(width: 52, alignment: .leading)
 
             // Bar
             GeometryReader { geo in
