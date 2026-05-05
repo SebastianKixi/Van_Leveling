@@ -8,8 +8,14 @@
 
 ## TODOs
 
-- [ ] **Einheitliches Design über alle Tabs** — Profile, Wasserwaage und Winkelmesser haben jeweils eigene Layouts. Vereinheitlichen: gemeinsame Akzentfarben, identische Spacings, konsistente Card-Styles, einheitliche Typo-Hierarchie.
-- [ ] **StoreKit-IAP einbauen** — `isProVersion = true` ist hardcoded, Camera-Profil ist Pro-only aber nicht gelockt. Pro-Bundle definieren (siehe Abschnitt 5).
+- [x] ~~Einheitliches Design über alle Tabs~~ (2026-05-05 abgenommen)
+- [ ] **Pro-Killer-Features implementieren** (siehe Abschnitt 5):
+   - Wohnwagen-Step-by-Step-Guide
+   - Audio-Feedback beim Ausrichten
+   - Voice-Anweisungen (deutsch)
+   - Apple Watch Komplikation
+   - Eigene Profile erstellen
+- [ ] **StoreKit-IAP einbauen** — `isProVersion = true` ist hardcoded. Pro-Bundle €4,99 One-Time mit obigen Features locken.
 - [ ] **App-Store-Listing** schreiben (DE + EN, Screenshots produzieren)
 - [ ] **TestFlight-Beta** mit 5–10 Wohnwagen-Forum-Testern
 
@@ -133,17 +139,49 @@ var isProVersion: Bool = true  // Monetization (Pro IAP not yet active)
 
 ## 5. IAP & Pro-Feature-Umfang
 
-**Empfehlung: Variante A — One-Time-IAP €3,99** für „Pro" (Camper-Markt erwartet One-Time-Purchases).
+**Empfehlung: Variante A — One-Time-IAP €4,99** für „Pro" (Camper-Markt erwartet One-Time-Purchases, der höhere Preis ist gerechtfertigt durch starke Killer-Features).
 
-**Pro-Bundle (universell für alle Zielgruppen):**
-- **Kamera-Profil** (existiert bereits, nur lock-en)
-- **Mess-Protokoll / History** — Messung speichern mit Datum + Notiz + GPS + Foto. Funktioniert für Camper (Stellplatz-Logbuch), Heimwerker (Werkstattprotokoll), Foto.
-- **PDF-Export** der Mess-Protokolle (Pro-Feature für Profis)
-- **Eigene Profile erstellen** — User legt eigene Profile mit Name + Toleranz + Anweisungen an
+**Pro-Bundle (Stand 2026-05-05, noch nicht implementiert):**
 
-**Free behält:** Allgemein + Wohnwagen + Gerät + Regal + Wasserwaage + **Winkelmesser** + Watch-Anzeige + Kalibrierung.
+1. **🎯 Wohnwagen-Step-by-Step-Guide** *(Killer für Camper)*
+   Statt cm-Berechnung (würde Setup mit Wohnwagen-Maßen erfordern) eine
+   live-reagierende Anleitung in Schritten:
+   *„1. Stärkste Neigung zuerst: rechtes Rad auf Auffahrkeil"*
+   *„2. Jetzt vorne/hinten: vordere linke Stütze ausfahren"*
+   Reagiert live, gibt immer nur den nächsten konkreten Schritt vor.
+   *Kein Setup nötig.* Aufwand: M.
 
-**Watch-Komplikation** könnte später als v1.1-Feature kommen.
+2. **🔊 Audio-Feedback beim Ausrichten** *(Killer für Hands-Free-Use)*
+   Während des Drehens piept das iPhone schneller je näher am Ziel
+   (wie Geigerzähler). Bei „Level erreicht" → Erfolgs-Sound.
+   Perfekt wenn man unter dem Kühlschrank/an der Stütze dreht und
+   nicht hinschauen kann. Aufwand: S.
+
+3. **🗣️ Voice-Anweisungen** *(deutsch)*
+   Sprachausgabe der Korrektur-Anweisungen ergänzend zu Audio.
+   *„Linke vordere Stütze anheben"* — Hände frei. Aufwand: S.
+
+4. **⌚ Apple Watch Komplikation**
+   Direkter Zugriff vom Zifferblatt — keine App-Liste durchsuchen.
+   Premium-Feel für Watch-User. Aufwand: S.
+
+5. **🛠️ Eigene Profile erstellen**
+   User legt eigene Profile mit Name + Toleranz + Anweisungstexten an.
+   Universal nützlich (mehrere Wohnwagen, spezifische Möbelstücke,
+   Werkbank etc.). Aufwand: M.
+
+**Verworfene Pro-Ideen (zu schwach oder zu komplex):**
+- Mess-Protokoll/History + PDF-Export — zu generisch, nicht zwingend
+- Stützen-Höhen-Berechnung in cm — bräuchte Setup mit Wohnwagen-Maßen
+  und Position des Handys; zu komplex für v1.0
+- Stellplatz-Logbuch — könnte später als v1.1-Bonus kommen
+- Themes — nice-to-have, nicht kaufkritisch
+
+**Free behält:** Alle 5 Profile (Allgemein/Wohnwagen/Kamera/Gerät/Regal)
++ Wasserwaage + **Winkelmesser** + Watch-Live-Anzeige + Kalibrierung.
+
+→ Camera-Profil ist NICHT mehr Pro-only (entschieden 2026-05-05).
+   Der Pro-Wert liegt nun in den 5 Killer-Features oben.
 
 ---
 
